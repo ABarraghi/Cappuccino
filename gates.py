@@ -70,8 +70,11 @@ class Nor(Gate):
             case 4:
                 return f"nor4$(.out({out_wire}), .in0({in_wires[in_wire_0]}), .in1({in_wires[in_wire_1]}), .in2({in_wires[in_wire_2]}), .in3({in_wires[in_wire_3]}));\n" 
  
-
-
-
-    
-
+class Dff(Gate):
+    def __init__(self, in_wire, out_wire):
+        self.in_wire = in_wire
+        self.out_wire = out_wire
+        
+    def to_verilog_string(self):
+        return f"dff$(.clk(clk), .d({in_wire}), .q({out_wire}), .qbar(), .r(res), .s(set));\n"
+ 
