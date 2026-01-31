@@ -3,15 +3,15 @@
 
 class Gate:
     def to_verilog_string(self):
-        return "Base Gate class method reached"
+        return "Base Gate class method reached\n"
 
 class Buffer(Gate):
-    def (self, in_wire, out_wire):
+    def __init__(self, in_wire, out_wire):
         self.in_wire = in_wire
         self.out_wire = out_wire
 
     def to_verilog_string(self):
-        return f"assign {out_wire} = {in_wire}"
+        return f"assign {self.out_wire} = {self.in_wire};\n"
 
 class Inv(Gate):
     def __init__(self, in_wire, out_wire):
@@ -19,7 +19,7 @@ class Inv(Gate):
         self.out_wire = out_wire
         
     def to_verilog_string(self):
-        return f"inv1$(.out({out_wire}), .in({in_wire}));\n"
+        return f"inv1$(.out({self.out_wire}), .in({self.in_wire}));\n"
 
 class Xor(Gate):
     def __init__(self, in_wire_0, in_wire_1, out_wire):
@@ -28,7 +28,7 @@ class Xor(Gate):
         self.out_wire = out_wire
         
     def to_verilog_string(self):
-        return f"xor2$(.out({out_wire}), .in0({in_wire_0}), .in1({in_wire_1}));\n"
+        return f"xor2$(.out({self.out_wire}), .in0({self.in_wire_0}), .in1({self.in_wire_1}));\n"
 
 class Xnor(Gate):
     def __init__(self, in_wire_0, in_wire_1, out_wire):
@@ -37,7 +37,7 @@ class Xnor(Gate):
         self.out_wire = out_wire
         
     def to_verilog_string(self):
-        return f"xnor2$(.out({out_wire}), .in0({in_wire_0}), .in1({in_wire_1}));\n"
+        return f"xnor2$(.out({self.out_wire}), .in0({self.in_wire_0}), .in1({self.in_wire_1}));\n"
 
 #Assume that NAND and NOR gates have less than or equal to 4 inputs
 class Nand(Gate):
@@ -47,13 +47,12 @@ class Nand(Gate):
         self.in_len = len(in_wires)
         
     def to_verilog_string(self):
-        match(in_len):
-            case 2:
-                return f"nand2$(.out({out_wire}), .in0({in_wires[in_wire_0]}), .in1({in_wires[in_wire_1]}));\n"
-            case 3:
-                return f"nand3$(.out({out_wire}), .in0({in_wires[in_wire_0]}), .in1({in_wires[in_wire_1]}), .in2({in_wires[in_wire_2]}));\n"
-            case 4:
-                return f"nand4$(.out({out_wire}), .in0({in_wires[in_wire_0]}), .in1({in_wires[in_wire_1]}), .in2({in_wires[in_wire_2]}), .in3({in_wires[in_wire_3]}));\n" 
+        if self.in_len == 2:
+                return f'nand2$(.out({self.out_wire}), .in0({self.in_wires["in_wire_0"]}), .in1({self.in_wires["in_wire_1"]}));\n'
+        elif self.in_len == 3:
+                return f'nand3$(.out({self.out_wire}), .in0({self.in_wires["in_wire_0"]}), .in1({self.in_wires["in_wire_1"]}), .in2({self.in_wires["in_wire_2"]}));\n'
+        elif self.in_len == 4:
+                return f'nand4$(.out({self.out_wire}), .in0({self.in_wires["in_wire_0"]}), .in1({self.in_wires["in_wire_1"]}), .in2({self.in_wires["in_wire_2"]}), .in3({self.in_wires["in_wire_3"]}));\n' 
  
 class Nor(Gate):
     def __init__(self, out_wire, **in_wires):
@@ -62,13 +61,12 @@ class Nor(Gate):
         self.in_len = len(in_wires)
         
     def to_verilog_string(self):
-        match(in_len):
-            case 2:
-                return f"nor2$(.out({out_wire}), .in0({in_wires[in_wire_0]}), .in1({in_wires[in_wire_1]}));\n"
-            case 3:
-                return f"nor3$(.out({out_wire}), .in0({in_wires[in_wire_0]}), .in1({in_wires[in_wire_1]}), .in2({in_wires[in_wire_2]}));\n"
-            case 4:
-                return f"nor4$(.out({out_wire}), .in0({in_wires[in_wire_0]}), .in1({in_wires[in_wire_1]}), .in2({in_wires[in_wire_2]}), .in3({in_wires[in_wire_3]}));\n" 
+        if self.in_len == 2:
+                return f'nor2$(.out({self.out_wire}), .in0({self.in_wires["in_wire_0"]}), .in1({self.in_wires["in_wire_1"]}));\n'
+        elif self.in_len == 3:
+                return f'nor3$(.out({self.out_wire}), .in0({self.in_wires["in_wire_0"]}), .in1({self.in_wires["in_wire_1"]}), .in2({self.in_wires["in_wire_2"]}));\n'
+        elif self.in_len == 4:
+                return f'nor4$(.out({self.out_wire}), .in0({self.in_wires["in_wire_0"]}), .in1({self.in_wires["in_wire_1"]}), .in2({self.in_wires["in_wire_2"]}), .in3({self.in_wires["in_wire_3"]}));\n' 
  
 class Dff(Gate):
     def __init__(self, in_wire, out_wire):
@@ -76,5 +74,5 @@ class Dff(Gate):
         self.out_wire = out_wire
         
     def to_verilog_string(self):
-        return f"dff$(.clk(clk), .d({in_wire}), .q({out_wire}), .qbar(), .r(res), .s(set));\n"
+        return f"dff$(.clk(clk), .d({self.in_wire}), .q({self.out_wire}), .qbar(), .r(res), .s(set));\n"
  
