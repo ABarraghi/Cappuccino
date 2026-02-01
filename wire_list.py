@@ -4,15 +4,16 @@
 # -> wires that were already assigned to an input 
 
 class WireList:
+    wires = []
+
     def __init__(self):
         self.size = 0
         self.def_counter = 0 #default wire name counter
-        self.wires = []
 
     def __str__(self):
         assgn_str = "wire"
         for i in range(self.size):
-            assgn_str += f" {self.wires[i]}"
+            assgn_str += f" {WireList.wires[i]}"
             
             if i < (self.size-1):
                 assgn_str +=","
@@ -25,10 +26,10 @@ class WireList:
             name = f"w{self.def_counter}"
             self.def_counter += 1
 
-        self.wires.append(name)
+        WireList.wires.append(name)
         self.size += 1
 
     def peek(self):
-        return self.wires[self.size-1]
+        return WireList.wires[self.size-1]
 
 

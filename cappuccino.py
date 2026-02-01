@@ -1,6 +1,7 @@
 #Top-level driver script for the Cappuccino circuit generator
 
 from gates import Gate, Buffer, Inv, Xor, Xnor, Nand, Nor, Dff 
+from wire_list import WireList
 
 def main():
     #Define instances
@@ -16,20 +17,30 @@ def main():
     nor3_test = Nor(in_wire_0="in0", in_wire_1="in1", in_wire_2="in2", out_wire="out")
     nor4_test = Nor(in_wire_0="in0", in_wire_1="in1", in_wire_2="in2", in_wire_3="in3", out_wire="out")
     dff_test = Dff(in_wire="in",out_wire="out");
+    
+    #Define and populate wire list, test peek function, access static wires array
+    wire_list = WireList()
+    wire_list.add_wire(name="S0")
+    wire_list.add_wire(name="nextS0")
+    wire_list.add_wire()
+    print(wire_list.peek())
+    print(wire_list.wires)
+
 
     #Test the verilog generator methods
-    print(gate_test.to_verilog_string())
-    print(buffer_test.to_verilog_string())
-    print(inv_test.to_verilog_string())
-    print(xor_test.to_verilog_string())
-    print(xnor_test.to_verilog_string())
-    print(nand2_test.to_verilog_string())
-    print(nand3_test.to_verilog_string())
-    print(nand4_test.to_verilog_string())
-    print(nor2_test.to_verilog_string())
-    print(nor3_test.to_verilog_string())
-    print(nor4_test.to_verilog_string())
-    print(dff_test.to_verilog_string())
+    print(gate_test)
+    print(buffer_test)
+    print(inv_test)
+    print(xor_test)
+    print(xnor_test)
+    print(nand2_test)
+    print(nand3_test)
+    print(nand4_test)
+    print(nor2_test)
+    print(nor3_test)
+    print(nor4_test)
+    print(dff_test)
+    print(wire_list)
 
 if __name__ == "__main__":
     main()
