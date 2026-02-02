@@ -3,58 +3,78 @@
 from gates import Gate, Buffer, Inv, Xor, Xnor, Nand, Nor, Dff 
 from wire_list import WireList
 from file_parser import FileParser
+from gate_tree import GateTree, GateNode
+
+import argparse
+import os
+
+parser = argparse.ArgumentParser(description="The Cappuccino structural verilog generator.")
+parser.add_argument("--out_file", "-o")
+parser.add_argument("--module_name", "-m")
+parser.add_argument("--in_table", "-i")
+
+args = parser.parse_args()
 
 def main():
-    #Define gate instances
-    gate_test = Gate()
-    buffer_test = Buffer(in_wire="in", out_wire="out")
-    inv_test = Inv(in_wire="in", out_wire="out")
-    xor_test = Xor(in_wire_0="in0", in_wire_1="in1", out_wire="out")
-    xnor_test = Xnor(in_wire_0="in0", in_wire_1="in1", out_wire="out")
-    nand2_test = Nand(in_wire_0="in0", in_wire_1="in1", out_wire="out")
-    nand3_test = Nand(in_wire_0="in0", in_wire_1="in1", in_wire_2="in2", out_wire="out")
-    nand4_test = Nand(in_wire_0="in0", in_wire_1="in1", in_wire_2="in2", in_wire_3="in3", out_wire="out")
-    nor2_test = Nor(in_wire_0="in0", in_wire_1="in1", out_wire="out")
-    nor3_test = Nor(in_wire_0="in0", in_wire_1="in1", in_wire_2="in2", out_wire="out")
-    nor4_test = Nor(in_wire_0="in0", in_wire_1="in1", in_wire_2="in2", in_wire_3="in3", out_wire="out")
-    dff_test = Dff(in_wire="in",out_wire="out");
-    
-    #Define and populate wire list, test peek function, access static wires array
+
     wire_list = WireList()
-    wire_list.add_wire(name="S0")
-    wire_list.add_wire(name="nextS0")
-    wire_list.add_wire()
-    print(wire_list.peek())
-    print(wire_list.wires)
-    wire_list_2 = WireList()
-    print(wire_list_2.wires)
 
+    os.system(f"./espresso.linux -Dso_both {args.in_table} > esp_out.pla")
 
-    #Test the verilog generator methods
-    print(gate_test)
-    print(buffer_test)
-    print(inv_test)
-    print(xor_test)
-    print(xnor_test)
-    print(nand2_test)
-    print(nand3_test)
-    print(nand4_test)
-    print(nor2_test)
-    print(nor3_test)
-    print(nor4_test)
-    print(dff_test)
-    print(wire_list)
-    print(wire_list_2)
+    file_parser = FileParser(pla_file_path="esp_out.pla")
 
-    #Test the File Parser
-    file_parser = FileParser(pla_file_path="esp_comb_out.pla")
-    print(file_parser.inputs)
-    print(file_parser.outputs)
-    print(wire_list)
-    file_parser = FileParser(pla_file_path="esp_statemachine.pla")
-    print(file_parser.inputs)
-    print(file_parser.outputs)
-    print(wire_list)
+    module_sig = f"module {args.module_name}("
+    in_str = "input"
+    out_str = "output"
+    
+    signal_idx = file_parser.signal_idx
+
+    while signal_idx < len(file_parser.inputs):
+        in_str += f" {file_parser.inputs[signal_idx]},"
+        signal_idx += 1
+
+    signal_idx = file_parser.signal_idx
+
+    while signal_idx < len(file_parser.outputs):
+        out_str += f" {file_parser.outputs[signal_idx]['signal']}"
+        if signal_idx < (len(file_parser.outputs)-1):
+            out_str += ","
+        else:
+            out_str += ");\n\n"
+
+        signal_idx += 1
+
+    if file_parser.signal_idx > 0:
+        in_str += " clk, set, res,"
+    in_str += "\n"
+
+    module_sig = module_sig + in_str + out_str
+        
+    tree_list = []
+    for term in file_parser.outputs:
+        gate_tree = GateTree(phase_type=term["phase_type"], products=term["products"], input_wires=file_parser.inputs, out_wire=term["signal"])
+        tree_list.append(gate_tree)
+    
+    with open(args.out_file, "w", encoding="utf-8") as f:
+        f.write(module_sig)
+        f.write(str(wire_list))
+        for tree in tree_list:
+            f.write(str(tree))
+        
+        f.write("\n")
+
+        state_idx = 0
+        while state_idx < file_parser.signal_idx:
+            in_signal = file_parser.inputs[state_idx]
+            out_signal = file_parser.outputs[state_idx]['signal']
+            cur_dff = Dff(in_wire=out_signal,out_wire=in_signal);
+            f.write(str(cur_dff))
+            state_idx += 1
+
+        f.write("\n")
+
+        f.write("endmodule")
+
 
 if __name__ == "__main__":
     main()

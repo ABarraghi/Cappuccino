@@ -215,3 +215,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+#Cappuccino data files and containers
+*.zip
+*.in
+*.pla
+*.v

@@ -5,31 +5,34 @@
 
 class WireList:
     wires = []
-
-    def __init__(self):
-        self.size = 0
-        self.def_counter = 0 #default wire name counter
+    size = 0
+    def_counter = 0 #default wire name counter
 
     def __str__(self):
         assgn_str = "wire"
-        for i in range(self.size):
+        for i in range(WireList.size):
             assgn_str += f" {WireList.wires[i]}"
             
-            if i < (self.size-1):
+            if i < (WireList.size-1):
                 assgn_str +=","
 
-        assgn_str += ";\n"
+        assgn_str += ";\n\n"
         return assgn_str
-
+    
     def add_wire(self, name=None):
         if name is None:
-            name = f"w{self.def_counter}"
-            self.def_counter += 1
+            name = f"w{WireList.def_counter}"
+            WireList.def_counter += 1
 
         WireList.wires.append(name)
-        self.size += 1
+        WireList.size += 1
+   
+    def pop_wire(self):
+       WireList.def_counter -= 1
+       WireList.size -= 1
+       WireList.wires.pop()
 
     def peek(self):
-        return WireList.wires[self.size-1]
+        return WireList.wires[WireList.size-1]
 
 

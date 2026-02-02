@@ -24,6 +24,7 @@ class FileParser:
                     self.inputs = token_list[1:]
 
                 if token_list[0] == ".ob":
+                    token_idx = 0
                     for signal in token_list[1:]:
                         signal_dict = {
                                 "signal": signal,
@@ -33,7 +34,11 @@ class FileParser:
                         self.outputs.append(signal_dict)
                         if "next" in signal: #state signal detected
                             self.signal_idx += 1
+                            wire_list.add_wire(name=self.inputs[token_idx]) #add cur and next state to wire list accordingly
                             wire_list.add_wire(name=signal)
+                        
+                        token_idx += 1
+
 
                 if token_list[0] == "#.phase":
                     counter = 0
