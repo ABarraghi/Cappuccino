@@ -2,9 +2,10 @@
 
 from gates import Gate, Buffer, Inv, Xor, Xnor, Nand, Nor, Dff 
 from wire_list import WireList
+from file_parser import FileParser
 
 def main():
-    #Define instances
+    #Define gate instances
     gate_test = Gate()
     buffer_test = Buffer(in_wire="in", out_wire="out")
     inv_test = Inv(in_wire="in", out_wire="out")
@@ -25,6 +26,8 @@ def main():
     wire_list.add_wire()
     print(wire_list.peek())
     print(wire_list.wires)
+    wire_list_2 = WireList()
+    print(wire_list_2.wires)
 
 
     #Test the verilog generator methods
@@ -40,6 +43,17 @@ def main():
     print(nor3_test)
     print(nor4_test)
     print(dff_test)
+    print(wire_list)
+    print(wire_list_2)
+
+    #Test the File Parser
+    file_parser = FileParser(pla_file_path="esp_comb_out.pla")
+    print(file_parser.inputs)
+    print(file_parser.outputs)
+    print(wire_list)
+    file_parser = FileParser(pla_file_path="esp_statemachine.pla")
+    print(file_parser.inputs)
+    print(file_parser.outputs)
     print(wire_list)
 
 if __name__ == "__main__":
