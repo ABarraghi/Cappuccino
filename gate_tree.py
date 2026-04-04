@@ -1,6 +1,6 @@
-#gate_tree.py
-# IDEALLY - Based on a given product/sum, represent it as a priority queue of gates
-# Ordered by delay
+# gate_tree.py
+# Based on a given product/sum, represents it as a tree of gates
+# Handles dynamic logic cascading for components with > 4 inputs
 
 from gates import Gate, Nand, Nor, Buffer, Inv  
 from wire_list import WireList
@@ -11,7 +11,7 @@ def flip_polarity(polarity):
     if polarity == "0":
         polarity = "1"
     elif polarity == "1":
-        polarity == "0"
+        polarity = "0"
     elif polarity == 0:
         polarity = 1
     elif polarity == 1:
@@ -19,24 +19,72 @@ def flip_polarity(polarity):
 
     return polarity
 
-
 class GateNode:
     def __init__(self, phase_type, out_wire):
         self.phase_type = phase_type
         self.out_wire = out_wire
-        self.num_inputs = 0
-        
-        self.gate = Nand(out_wire=self.out_wire) 
-        if self.phase_type == 0:
-            self.gate = Nor(out_wire=self.out_wire)
-
-    def __str__(self):
-        return str(self.gate)
+        self.in_wires = []
+        self.gates = [] # Hold the cascaded tree of gates
 
     def add_input(self, in_wire):
-        wire_key = f"in_wire_{self.num_inputs}"
-        self.gate.in_wires[wire_key] = in_wire
-        self.num_inputs += 1
+        self.in_wires.append(in_wire)
+
+    def build_tree(self):
+        """Constructs a cascaded tree of <=4 input gates for N-input logic."""
+        if self.gates:
+            return # Prevent duplicate builds if called repeatedly
+
+        current_signals = self.in_wires
+
+        # Recursively group into chunks of up to 4
+        while len(current_signals) > 4:
+            next_signals = []
+            for i in range(0, len(current_signals), 4):
+                chunk = current_signals[i:i+4]
+                if len(chunk) == 1:
+                    next_signals.append(chunk[0])
+                else:
+                    wire_list.add_wire()
+                    w_mid = wire_list.peek()
+                    wire_list.add_wire()
+                    w_and_or = wire_list.peek()
+
+                    if self.phase_type == 1:
+                        gate = Nand(out_wire=w_mid)
+                    else:
+                        gate = Nor(out_wire=w_mid)
+
+                    for idx, sig in enumerate(chunk):
+                        gate.in_wires[f"in_wire_{idx}"] = sig
+
+                    self.gates.append(gate)
+                    
+                    # Invert the output to restore the AND/OR representation 
+                    # before feeding into the next layer
+                    self.gates.append(Inv(in_wire=w_mid, out_wire=w_and_or))
+                    next_signals.append(w_and_or)
+
+            current_signals = next_signals
+
+        # Assemble the final terminating gate
+        if self.phase_type == 1:
+            final_gate = Nand(out_wire=self.out_wire)
+        else:
+            final_gate = Nor(out_wire=self.out_wire)
+
+        for idx, sig in enumerate(current_signals):
+            final_gate.in_wires[f"in_wire_{idx}"] = sig
+
+        self.gates.append(final_gate)
+
+    def __str__(self):
+        # Fallback in case string conversion occurs before explicit build
+        self.build_tree() 
+        stack_str = ""
+        for gate in self.gates:
+            stack_str += str(gate)
+        return stack_str
+
 
 class GateTree:
     def __init__(self, phase_type, products, input_wires, out_wire):
@@ -44,7 +92,7 @@ class GateTree:
         self.phase_type = phase_type
         self.products = products
 
-        #if single multi-term product driving an output, flip phase and inputs before double negation
+        # if single multi-term product driving an output, flip phase and inputs before double negation
         sans_dont_cares = self.products[0].replace("-","")
         if len(self.products) == 1 and len(sans_dont_cares) > 1:
             self.phase_type = flip_polarity(self.phase_type)
@@ -56,7 +104,6 @@ class GateTree:
             self.products[0] = inv_term
 
         # first pass: compute logic for each product
-        prod_idx = 0
         first_prod_out = []
         for product in self.products:
             term_idx = 0
@@ -73,17 +120,17 @@ class GateTree:
                     node_in_wires.append(term)
                 term_idx += 1
 
-            
-            if len(node_in_wires) == 1: #if single input drives an output, connect wire directly
+            if len(node_in_wires) == 1: # if single input drives an output, connect wire directly
                 top_gate = self.gate_stack[-1]
                 if isinstance(top_gate, Inv):
                     wire_list.pop_wire()
-                top_gate.out_wire=out_wire
+                top_gate.out_wire = out_wire
                 self.gate_stack[-1] = top_gate
+                first_prod_out.append(out_wire)
 
             elif len(node_in_wires) > 1:
                 prod_out = out_wire
-                if len(self.products) > 1: #if single product drives output, connect node out directly to final output
+                if len(self.products) > 1: # if single product drives output, connect node out directly to final output
                     wire_list.add_wire()
                     prod_out = wire_list.peek()
                 
@@ -92,16 +139,23 @@ class GateTree:
                 for wire in node_in_wires:
                     prod_node.add_input(in_wire=wire)
 
-
+                # Explicitly build the tree now so that `wire_list` captures intermediate 
+                # wires BEFORE `cappuccino.py` prints the global wire list.
+                prod_node.build_tree() 
                 self.gate_stack.append(prod_node)
-                first_prod_out.append(out_wire)
+                
+                # BUGFIX: Append 'prod_out' instead of 'out_wire'. Appending 'out_wire'
+                # short-circuited intermediate sum aggregations.
+                first_prod_out.append(prod_out)
 
-
-        #second pass, compute second level product logic - if more than one product exists
+        # second pass, compute second level product logic - if more than one product exists
         if len(first_prod_out) > 1:
             out_prod_node = GateNode(phase_type=self.phase_type, out_wire=out_wire)
             for prod_wire in first_prod_out:
                 out_prod_node.add_input(prod_wire)
+            
+            # Explicitly build the final sum tree
+            out_prod_node.build_tree()
             self.gate_stack.append(out_prod_node)
 
     def __str__(self):
@@ -109,6 +163,3 @@ class GateTree:
         for gate in self.gate_stack:
             stack_str += str(gate)
         return stack_str
-
-    
-
