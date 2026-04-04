@@ -10,5 +10,3 @@ Arguments:
 Ensure that cappuccino.py has execute privilege (chmod +x cappuccino.py), and that the espresso.linux executable is in the same directory as the python scripts. 
 
 The tool detects whether a given input file is combinational or a state machine based on the output wire naming, where next state wires begin with the term "next". 
-
-The tool assumes at most 4 active signals to a given product, and at most 4 total products for each output signal.  
