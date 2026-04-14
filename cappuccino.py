@@ -45,7 +45,7 @@ def main():
         signal_idx += 1
 
     if file_parser.signal_idx > 0:
-        in_str += " clk, set, res,"
+        in_str += " clk, set, rst,"
     in_str += "\n"
 
     module_sig = module_sig + in_str + out_str

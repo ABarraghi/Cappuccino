@@ -91,4 +91,4 @@ class Dff(Gate):
         self.out_wire = out_wire
         
     def __str__(self):
-        return f"dff$ {self.out_wire}_dff (.clk(clk), .d({self.in_wire}), .q({self.out_wire}), .qbar(), .r(res), .s(set));\n"
+        return f"dff$ {self.out_wire}_dff (.clk(clk), .d({self.in_wire}), .q({self.out_wire}), .qbar(), .r(rst), .s(set));\n"
